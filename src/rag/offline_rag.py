@@ -2,6 +2,7 @@ import re
 from langchain import hub
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
 
 
 class Str_OutputParser(StrOutputParser):
@@ -11,7 +12,7 @@ class Str_OutputParser(StrOutputParser):
     def parse(self, text: str) -> str:
         return self.etract_answer(text)
 
-    def etract_answer(self, text_response: str, pattern: str = r"Answer:\s*(.*)") -> str:
+    def etract_answer(self, text_response: str, pattern: str = r"Answer:\s*(.+)") -> str:
         match = re.search(pattern, text_response, re.DOTALL)
         if match:
             answer_text = match.group(1).strip()
@@ -39,5 +40,5 @@ class Offline_RAG:
         )
         return rag_chain
 
-    def format_docs(self , docs):
+    def format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)

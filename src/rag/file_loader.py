@@ -12,7 +12,7 @@ def remove_non_utf8_character(text):
 
 
 def load_pdf(pdf_file):
-    docs = PyPDFLoader(pdf_file, extract_images=True).load()
+    docs = PyPDFLoader(pdf_file , extract_images=True).load()
     for doc in docs:
         doc.page_content = remove_non_utf8_character(doc.page_content)
     return docs
