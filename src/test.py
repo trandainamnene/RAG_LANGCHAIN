@@ -1,14 +1,22 @@
-import os
+from src.base import llm_model
+from src.rag.main import build_rag_chain
+from deep_translator import GoogleTranslator
+import asyncio
+def process_vi_prompt(vi_prompt):
+    # Dịch sang tiếng Anh (async)
+    translator = GoogleTranslator(source="vi" , target="en")
+    en_prompt = translator.translate(vi_prompt)
 
-genai_docs = "../data_source/generative_ai"
-print(f"Checking data directory: {genai_docs}")
-if not os.path.exists(genai_docs):
-    raise FileNotFoundError(f"Data directory not found: {genai_docs}")
+    # Gọi LLM (giả sử llm.invoke() không phải async)
+    llm = llm_model.get_hf_llm()
+    en_output = llm.invoke(en_prompt)
+    vi_output = GoogleTranslator(source="en", target="vi")
+    return vi_output.translate(en_output)
 
-# Kiểm tra xem có file PDF nào trong thư mục không
-pdf_files = [f for f in os.listdir(genai_docs) if f.endswith(".pdf")]
-print(f"Found PDF files: {pdf_files}")
+def main():
+    vi_prompt = "Question : Thủ đô của Hàn Quốc là gì  Answer :"
+    result = process_vi_prompt(vi_prompt)
+    print(result)
 
-if not pdf_files:
-    raise ValueError(f"No PDF files found in {genai_docs}")
-
+if __name__ == "__main__":
+    main()

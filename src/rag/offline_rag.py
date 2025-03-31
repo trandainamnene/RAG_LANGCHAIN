@@ -3,6 +3,7 @@ from langchain import hub
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder  # Xử lý prompt
 
 
 class Str_OutputParser(StrOutputParser):
@@ -24,7 +25,8 @@ class Str_OutputParser(StrOutputParser):
 class Offline_RAG:
     def __init__(self, llm):
         self.llm = llm
-        self.prompt = hub.pull("rlm/rag-prompt")
+        en_prompt = hub.pull("rlm/rag-prompt")
+        self.prompt = en_prompt
         self.str_parser = Str_OutputParser()
 
     def get_chain(self, retriever):
