@@ -1,24 +1,26 @@
+"""Load PDF file"""
 import multiprocessing
 from typing import Union, List, Literal
 import glob
-import os
 from tqdm import tqdm
 from langchain.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 def remove_non_utf8_character(text):
+    """Hàm xóa các kí tự không thuộc định dạng utf-8"""
     return ''.join(char for char in text if ord(char) < 128)
 
 
 def load_pdf(pdf_file):
-    docs = PyPDFLoader(pdf_file , extract_images=True).load()
+    docs = PyPDFLoader(pdf_file, extract_images=True).load()
     for doc in docs:
         doc.page_content = remove_non_utf8_character(doc.page_content)
     return docs
 
 
 def get_num_cpu():
+    """Lấy số nhân của cpu"""
     return multiprocessing.cpu_count()
 
 
@@ -47,10 +49,12 @@ class PDFLoader(BaseLoader):
 
 
 class TextSplitter:
-    def __init__(self, seperators: List[str] = ['\n\n', "\n", ' ', ''], chunk_size: int = 300,
+    def __init__(self, separators, chunk_size: int = 300,
                  chunk_overlap: int = 0) -> None:
+        if separators is None:
+            separators = ['\n\n', "\n", ' ']
         self.splitter = RecursiveCharacterTextSplitter(
-            separators=seperators,
+            separators=separators,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap
         )
@@ -62,7 +66,7 @@ class TextSplitter:
 class Loader:
     def __init__(self, file_type: str = Literal["pdf"],
                  split_kwargs: dict = {"chunk_size": 300, "chunk_overlap": 0}) -> None:
-        assert file_type in ["pdf"] , "file must be pdf"
+        assert file_type in ["pdf"], "file must be pdf"
         self.file_type = file_type
         if file_type == "pdf":
             self.doc_loader = PDFLoader()

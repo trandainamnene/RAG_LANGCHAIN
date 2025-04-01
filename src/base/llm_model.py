@@ -3,8 +3,9 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain_huggingface import HuggingFacePipeline
 from transformers import BitsAndBytesConfig
 
+
 def get_hf_llm(model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", max_new_tokens=512, **kwargs):
-    nf4_config = BitsAndBytesConfig(
+    nf4_config=BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
         bnb_4bit_use_double_quant=True,
@@ -31,4 +32,3 @@ def get_hf_llm(model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", max_new_t
         pipeline=model_pipline,
     )
     return llm
-
