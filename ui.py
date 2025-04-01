@@ -52,14 +52,12 @@ def display_chat_ui():
                 st.session_state.messages.append({"role": "user", "content": user_input})
 
                 # Dịch và tạo phản hồi
-                en_prompt = translate(_from="vi", _to="en", text=user_input)
-                model_response = model.invoke(en_prompt)
-                vn_response = translate(_from="en", _to="vi", text=f"Rag Chat Bot: {model_response}")
+                model_response = model.invoke(user_input)
 
                 # Thêm phản hồi vào lịch sử
                 st.session_state.messages.append({
                     "role": "assistant",
-                    "content": vn_response
+                    "content": model_response
                 })
 
                 # Làm mới UI để hiển thị tin nhắn mới
