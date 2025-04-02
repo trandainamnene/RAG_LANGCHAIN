@@ -14,7 +14,7 @@
 |------------------|---------------------------------------------------------------|  
 | **Backend**      | LangChain (RAG Pipeline)                                      |  
 | **Vector DB**    | Milvus (lưu trữ và tìm kiếm embedding triệu chứng/bệnh án)    |  
-| **LLM**         | Gemini 2.5 Flash (Google AI) để phân tích ngữ cảnh và trả lời |  
+| **LLM**         | Gemini 2.0 Flash (Google AI) để phân tích ngữ cảnh và trả lời |  
 | **Dữ liệu**     | Crawl từ nguồn y tế đáng tin cậy (HTML → Text → Vector)       |  
 
 ---
@@ -37,3 +37,11 @@ pip install -r requirements.txt
 
 # Khởi chạy ứng dụng
 streamlit run ui.py
+
+## 👥 Thành viên dự án
+
+| Tên            | 
+|----------------|
+| Trần Đại Nam   | 
+| Huỳnh Thành Tựu| 
+| Nguyễn Duy Dương|
