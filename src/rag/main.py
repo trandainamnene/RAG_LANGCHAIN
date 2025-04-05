@@ -11,7 +11,7 @@ class outputQA(BaseModel):
 
 def build_rag_chain(llm , data_dir , data_type) :
     # doc_loaded = Loader(file_type = data_type).load_dir(data_dir , workers = 1)
-    retriever = get_retriever()
+    retriever = get_retriever(collection_name="data_test_2")
     rag_chain = Offline_RAG(llm).get_chain(retriever=retriever)
 
     return rag_chain

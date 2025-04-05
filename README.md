@@ -39,9 +39,6 @@ pip install -r requirements.txt
 streamlit run ui.py
 
 ## 👥 Thành viên dự án
-
-| Tên            | 
-|----------------|
-| Trần Đại Nam   | 
-| Huỳnh Thành Tựu| 
-| Nguyễn Duy Dương|
+- Trần Đại Nam 
+- Huỳnh Thành Tựu
+- Nguyễn Duy Dương

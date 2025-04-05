@@ -55,7 +55,7 @@ def display_chat_ui():
 
                 # Dịch và tạo phản hồi
                 model_response = model.invoke(user_input)
-
+                # st.write_stream(model_response)
                 # Thêm phản hồi vào lịch sử
                 st.session_state.messages.append({
                     "role": "assistant",
