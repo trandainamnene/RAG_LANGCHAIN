@@ -4,8 +4,6 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain_milvus import Milvus
 from langchain.schema import Document
 from uuid import uuid4
-from typing import Union
-from langchain.vectorstores import FAISS
 from langchain.retrievers import EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
 
