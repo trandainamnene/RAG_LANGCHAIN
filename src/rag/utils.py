@@ -1,4 +1,3 @@
-from deep_translator import GoogleTranslator
 from typing import List, Any, Optional
 from langchain.schema.retriever import BaseRetriever
 from langchain.schema import Document
@@ -10,12 +9,7 @@ import os
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from src.base.llm_model import get_hf_llm
 from dotenv import load_dotenv
-def translate(text , _from = "en" , _to="vi") :
-    translator = GoogleTranslator(source=_from, target=_to)
-    rs = translator.translate(text)
-    return rs
-
-
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 load_dotenv()
 
@@ -126,4 +120,3 @@ if __name__ == "__main__":
     QUERY_STRING = "Tôi bị đau dương vật ?"
     documents = retriever.get_relevant_documents(QUERY_STRING)
     print(documents)
-

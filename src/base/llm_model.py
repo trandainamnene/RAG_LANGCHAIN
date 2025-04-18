@@ -4,12 +4,16 @@ from langchain_huggingface import HuggingFacePipeline
 from transformers import BitsAndBytesConfig
 from dotenv import load_dotenv
 import os
+from google.oauth2 import service_account
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 
 def get_hf_llm(model_name="gemini-2.0-flash", max_new_tokens=512, **kwargs):
     # Load API key
     load_dotenv()
+    credentials = service_account.Credentials.from_service_account_file(
+        "C:/Users/Dai Nam/vibrant-arcanum-457115-c0-233017afbfc3.json"
+    )
     google_api_key = os.getenv("GOOGLE_API_KEY")
     print(google_api_key)
     # nf4_config = BitsAndBytesConfig(
@@ -42,7 +46,8 @@ def get_hf_llm(model_name="gemini-2.0-flash", max_new_tokens=512, **kwargs):
         timeout=None,
         max_retries=2,
         google_api_key=google_api_key,
-        streaming=True
+        streaming=True,
+        credentials=credentials,
         # other params...
     )
     return llm

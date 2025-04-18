@@ -1,7 +1,6 @@
 import streamlit as st
 from src.rag.main import build_rag_chain
 from src.base.llm_model import get_hf_llm
-from src.rag.utils import translate
 
 collection_name = "data_test"
 
