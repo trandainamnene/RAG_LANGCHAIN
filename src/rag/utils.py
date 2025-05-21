@@ -7,10 +7,14 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 import os
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
+from langchain_core.output_parsers import StrOutputParser
+
 from src.base.llm_model import get_hf_llm
 from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
+from langchain.prompts import PromptTemplate
+from langchain_core.runnables import RunnableLambda
+import numpy as np
 load_dotenv()
 
 
@@ -21,7 +25,6 @@ class FallBackRetriever(BaseRetriever):
     # Cài đặt google_search_api_key và google_cse_id trong env
     google_api_key: Optional[str] = os.getenv("GOOGLE_SEARCH_API_KEY")
     google_cse_id: Optional[str] = os.getenv("GOOGLE_SEARCH_CSE_ID")
-
     def __init__(self,
                  *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
@@ -80,17 +83,40 @@ class FallBackRetriever(BaseRetriever):
 
     def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun) -> list[Document]:
         """
-          Tìm kiếm thông tin chỉ từ web.
+        Tìm kiếm thông tin chỉ từ web và lọc những document liên quan đến query.
         """
-        print("Tìm kiếm từ wed.")
+        print("Tìm kiếm từ web.")
         try:
+            embedding_model = HuggingFaceEmbeddings()
             web_results = self.web_retriever.get_relevant_documents(query)
-            return web_results
+            if not web_results:
+                print("Không tìm thấy kết quả web.")
+                return []
+
+            # Tính vector truy vấn
+            query_vec = embedding_model.embed_query(query)
+
+            # Lọc kết quả theo độ tương đồng
+            filtered_results = []
+            for doc in web_results:
+                doc_vec = embedding_model.embed_query(doc.page_content)
+                similarity = self.cosine_similarity(query_vec, doc_vec)
+                print(f"Similarity with doc: {similarity}")
+                if similarity >= 0.8:  # threshold có thể điều chỉnh
+                    filtered_results.append(doc)
+
+            if not filtered_results:
+                print("Không có context đủ liên quan sau khi lọc.")
+            return filtered_results
+
         except Exception as e:
             print(f"Lỗi khi tìm kiếm web: {str(e)}")
-            # Nếu không có web retriever hoặc bị lỗi, trả về danh sách trống
-            print("Tìm kiếm web không khả dụng hoặc bị lỗi. Trả về danh sách trống.")
             return []
+
+    def cosine_similarity(self, vec1, vec2) -> float:
+        a = np.array(vec1)
+        b = np.array(vec2)
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
     @staticmethod
     def _create_temporary_vectorstore():
@@ -112,11 +138,23 @@ class FallBackRetriever(BaseRetriever):
         )
         return vectorstore
 
+class Summarize :
+    def __init__(self , llm):
+        self.llm = llm
+        self.prompt = PromptTemplate.from_template(
+            "Tóm tắt câu hỏi này thành một đoạn ngắn gọn, rõ ràng:\n\n{question}"
+        )
+    def get_sumary_chain(self):
+        summary_chain = self.prompt | self.llm | StrOutputParser()
+        return summary_chain
+
+
+
 
 if __name__ == "__main__":
     # Tạo đối tượng FallBackRetriever
     retriever = FallBackRetriever()
     # Query truy vấn trên web
-    QUERY_STRING = "Tôi bị đau dương vật ?"
+    QUERY_STRING = "Dân số của Pháp"
     documents = retriever.get_relevant_documents(QUERY_STRING)
     print(documents)

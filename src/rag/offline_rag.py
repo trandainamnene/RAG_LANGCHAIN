@@ -1,11 +1,13 @@
 import re
 from langchain import hub
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from src.rag.utils import FallBackRetriever
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ConversationBufferMemory
-
+from langchain_core.messages import HumanMessage, AIMessage
+import numpy as np
 class Str_OutputParser(StrOutputParser):
     def __init__(self) -> None:
         super().__init__()
@@ -25,28 +27,34 @@ class Str_OutputParser(StrOutputParser):
 class Offline_RAG:
     def __init__(self, llm):
         self.llm = llm
+        self.embedding_model = HuggingFaceEmbeddings()
         self.memory = ConversationBufferMemory(
             memory_key="chat_history",  # Khóa để truy xuất lịch sử trong prompt
             return_messages=True  # Trả về danh sách các tin nhắn (HumanMessage, AIMessage)
         )
-        _prompt = self.prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are a helpful assistant. Use the following context and chat history to answer the question."),
-            MessagesPlaceholder(variable_name="chat_history"),  # Chỗ để chèn lịch sử hội thoại
-            ("human", "Context: {context}\n\nQuestion: {question}")
+        _prompt = ChatPromptTemplate.from_messages([
+            ("system",
+             "Bạn là một trợ lý ảo y khoa, chuyên hỗ trợ bác sĩ trong việc đưa ra chỉ định cận lâm sàng và quyết định lâm sàng. "
+             "Dựa trên ngữ cảnh thông tin y học bên dưới và lịch sử hội thoại gần nhất, hãy trả lời rõ ràng, chính xác. "
+             "Nếu câu hỏi liên quan đến lịch sử hội thoại, hãy chỉ xem xét các câu hỏi và câu trả lời ngay trước đó. "
+             "Nếu không đủ thông tin, hãy nói rõ và đề xuất các xét nghiệm cận lâm sàng cần thiết."),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "Ngữ cảnh: {context}\n\nCâu hỏi: {question}")
         ])
         self.prompt = _prompt
         self.str_parser = Str_OutputParser()
         self.fallback = FallBackRetriever()
+        self.memory.clear()  #
 
 
     def get_chain(self, retriever):
         def retriever_with_fallback(question: str):
             initial_docs = retriever.get_relevant_documents(question)
             initial_context = self.format_docs(initial_docs)
-            if not self.is_context_relevant(initial_context , question):
-                print("Độ dài context không đủ hoặc câu hỏi không liên quan , chuyển sang truy vấn web")
+            if not self.is_context_relevant(initial_context, question):
+                print("Độ dài context không đủ hoặc câu hỏi không liên quan, chuyển sang truy vấn web")
                 return self.format_docs(self.fallback.get_relevant_documents(question))
-            else :
+            else:
                 return initial_context
 
         input_data = {
@@ -60,21 +68,75 @@ class Offline_RAG:
                 | self.llm
                 | self.str_parser
         )
-        def chain_with_memory(input_question: str):
-            response = rag_chain.invoke(input_question)
-            # Lưu câu hỏi và câu trả lời vào memory
-            self.memory.save_context({"input": input_question}, {"output": response})
-            return response
+
+        def chain_with_memory(input_question):
+            if isinstance(input_question, HumanMessage):
+                print("is HumanMessage")
+                question_text = self.extract_text_from_message(input_question)
+                response = rag_chain.invoke(question_text)
+            elif isinstance(input_question, str):
+                print("is str")
+                question_text = input_question
+                response = rag_chain.invoke(question_text)
+            else:
+                raise ValueError("Input must be str or HumanMessage")
+
+            response_text = (
+                self.extract_text_from_message(response)
+                if isinstance(response, AIMessage)
+                else str(response)
+            )
+
+            # Save chat history
+            print("Lịch sử trước:", self.memory.load_memory_variables({})["chat_history"])
+            self.memory.save_context({"input": question_text}, {"output": response_text})
+            print("Lịch sử sau:", self.memory.load_memory_variables({})["chat_history"])
+
+            return response_text
 
         return chain_with_memory
 
     def format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)
 
-    def is_context_relevant(self , context:str , question:str) -> bool :
+    def is_context_relevant(self, context: str, question: str, threshold: float = 0.8) -> bool:
+        """
+        Tính cosine similarity giữa câu hỏi và từng đoạn context.
+        Nếu có đoạn nào similarity >= threshold thì context được coi là liên quan.
+        """
         if not context.strip():
             return False
-        question_words = set(question.lower().split())
-        context_words = set(context.lower().split())
-        common_words = question_words.intersection(context_words)
-        return len(common_words) > 0
+
+        try:
+            question_vec = self.embedding_model.embed_query(question)
+            context_chunks = context.split("\n\n")
+            for chunk in context_chunks:
+                chunk_vec = self.embedding_model.embed_query(chunk)
+                similarity = self.cosine_similarity(question_vec, chunk_vec)
+                print(f"Similarity with chunk: {similarity}")
+                if similarity >= threshold:
+                    return True
+            return False
+        except Exception as e:
+            print(f"Lỗi khi tính similarity: {str(e)}")
+            return False
+
+    def cosine_similarity(self, vec1, vec2) -> float:
+        a = np.array(vec1)
+        b = np.array(vec2)
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+
+
+    def extract_text_from_message(self, message: HumanMessage) -> str:
+        if isinstance(message, (HumanMessage, AIMessage)):
+            if isinstance(message.content, str):
+                return message.content
+            elif isinstance(message.content, list):
+                # Chỉ lấy các phần tử văn bản từ danh sách content
+                text_parts = [
+                    item["text"] for item in message.content
+                    if isinstance(item, dict) and item.get("type") == "text"
+                ]
+                return " ".join(text_parts)
+        return str(message)

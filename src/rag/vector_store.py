@@ -105,7 +105,7 @@ def get_retriever(collection_name: str = "data_test") -> EnsembleRetriever:
         if not documents:
             raise ValueError(f"Không tìm thấy documents trong collection '{collection_name}'")
         bm25_retriever = BM25Retriever.from_documents(documents)
-        bm25_retriever.k = 4
+        bm25_retriever.k = 2
 
         # Kết hợp hai retriever với tỷ trọng
         ensemble_retriever = EnsembleRetriever(
