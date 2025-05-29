@@ -42,7 +42,6 @@ def get_hf_llm(model_name="gemini-2.0-flash", max_new_tokens=512, **kwargs):
     llm = ChatGoogleGenerativeAI(
         model=model_name,
         temperature=0,
-        max_tokens=max_new_tokens,
         timeout=None,
         max_retries=2,
         google_api_key=google_api_key,

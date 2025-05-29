@@ -34,7 +34,21 @@ async def to_async_generator(sync_gen: Generator[str, None, None]):
 async def check() :
     return {"status" : "ok"}
 
-@app.post("/summarize" , response_model=outputSummarize)
+@app.post("/summarize")
+async def summarize(input: inputQA):
+    summarize_chain = Summarize(llm=llm).get_sumary_chain()
+    if not input.image:
+        result = summarize_chain.invoke({"question": input.question})
+    else :
+        prompt = input.question
+        message = HumanMessage(
+            content=[
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": f"data:{input.image.type};base64,{input.image.url}"}
+            ]
+        )
+        result = summarize_chain.invoke({"question": message})
+    return {"answer": result}
 async def summarize(input : inputSummarize) :
     summarize = Summarize(llm=llm).get_sumary_chain()
     result = summarize.invoke({"question" : input.question})
@@ -43,7 +57,7 @@ async def summarize(input : inputSummarize) :
 async def generative_ai(inputs : inputQA) :
     print("GOOGLE_SEARCH_API_KEY:", os.getenv("GOOGLE_SEARCH_API_KEY"))
     genai_docs = "./data_source/generative_ai"
-    genai_chain = build_rag_chain(llm, data_dir=genai_docs, data_type="pdf")
+    genai_chain = build_rag_chain(llm)
     if (not inputs.image) :
         question = inputs.question
         stream_generator = genai_chain(question)  # Đây là generator

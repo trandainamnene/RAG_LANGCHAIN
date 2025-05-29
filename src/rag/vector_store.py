@@ -89,12 +89,7 @@ def get_retriever(collection_name: str = "data_test") -> EnsembleRetriever:
         vectorstore = connect_to_milvus('http://localhost:19530', collection_name)
         milvus_retriever = vectorstore.as_retriever(
             search_type="similarity",
-            search_kwargs={"k": 4}
-        )
-
-        milvus_retriever = vectorstore.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": 4}
+            search_kwargs={"k": 10}
         )
 
         documents = [
@@ -105,7 +100,7 @@ def get_retriever(collection_name: str = "data_test") -> EnsembleRetriever:
         if not documents:
             raise ValueError(f"Không tìm thấy documents trong collection '{collection_name}'")
         bm25_retriever = BM25Retriever.from_documents(documents)
-        bm25_retriever.k = 2
+        bm25_retriever.k = 10
 
         # Kết hợp hai retriever với tỷ trọng
         ensemble_retriever = EnsembleRetriever(

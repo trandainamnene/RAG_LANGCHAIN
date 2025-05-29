@@ -73,19 +73,16 @@ class Offline_RAG:
             if isinstance(input_question, HumanMessage):
                 print("is HumanMessage")
                 question_text = self.extract_text_from_message(input_question)
-                response = rag_chain.invoke(question_text)
+                # response_from_model = self.llm.invoke([input_question])
+                response = self.llm.invoke([input_question])
+                print(type(response))
+                response_text = rag_chain.invoke(f"Bác sĩ đã gửi 1 tấm ảnh , và đây là mô tả về hình ảnh : {response.content}")
             elif isinstance(input_question, str):
                 print("is str")
                 question_text = input_question
-                response = rag_chain.invoke(question_text)
+                response_text = rag_chain.invoke(question_text)
             else:
                 raise ValueError("Input must be str or HumanMessage")
-
-            response_text = (
-                self.extract_text_from_message(response)
-                if isinstance(response, AIMessage)
-                else str(response)
-            )
 
             # Save chat history
             print("Lịch sử trước:", self.memory.load_memory_variables({})["chat_history"])
@@ -99,7 +96,7 @@ class Offline_RAG:
     def format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)
 
-    def is_context_relevant(self, context: str, question: str, threshold: float = 0.8) -> bool:
+    def is_context_relevant(self, context: str, question: str, threshold: float = 0.85) -> bool:
         """
         Tính cosine similarity giữa câu hỏi và từng đoạn context.
         Nếu có đoạn nào similarity >= threshold thì context được coi là liên quan.

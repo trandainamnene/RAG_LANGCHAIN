@@ -98,7 +98,7 @@ def crawl_icd_web(url_data="https://icd.who.int/browse/2025-01/mms/en"):
                     try:
                         # Lấy tên danh mục
                         category_name = category.find_element(By.CLASS_NAME , "labelinh").text.strip()
-                        # print(f"{'  ' * level}Đang xử lý danh mục cấp {level}: {category_name}")
+                        print(f"{'  ' * level}Đang xử lý danh mục cấp {level}: {category_name}")
 
                         # Tạo dict để lưu thông tin danh mục
                         category_info = {
@@ -111,7 +111,7 @@ def crawl_icd_web(url_data="https://icd.who.int/browse/2025-01/mms/en"):
                         driver.execute_script("arguments[0].scrollIntoView();", category)
                         # print("sap click")
                         category.click()
-                        time.sleep(2)  # Đợi load nội dung
+                        time.sleep(1)  # Đợi load nội dung
                         has_sub_menu = False
                         try :
                             collapsed_icon = WebDriverWait(driver, 10).until(
@@ -124,25 +124,25 @@ def crawl_icd_web(url_data="https://icd.who.int/browse/2025-01/mms/en"):
                         except Exception as e:
                             print(f"Khong co tab con")
 
-                        time.sleep(2)
+                        time.sleep(1)
                         # Kiểm tra xem có submenu không
-                        submenu_items = True
-                        print(f"Submenu_items {submenu_items}")
                         if has_sub_menu:
                             # Nếu có submenu, crawl đệ quy cấp tiếp theo
                             print(f"{'  ' * level}Tìm thấy submenu cho {category}")
                             category_info["children"] = crawl_menu_level(category, level + 1)
                             # lấy nội dung bên phải
-                            right_panel = WebDriverWait(driver, 10).until(
+                            right_panel = WebDriverWait(driver, 5).until(
                                 EC.presence_of_element_located((By.CLASS_NAME, "browserBodyRightContent"))
                             )
 
                             content_text = right_panel.text.strip()
                             right_panel_data = right_panel_data + "\n" + content_text
+                            print(right_panel_data)
                         # Thêm danh mục vào danh sách kết quả
                         menu_data.append(category_info)
 
                     except Exception as e:
+                        print(e)
                         print(f"k crawl")
 
                 return menu_data
@@ -243,7 +243,7 @@ async def main():
 
     #test crawl data from crawl4AI
     url = "https://icd.who.int/browse/2025-01/mms/en"
-    data = await crawl_data_using_crawl4AI(url=url)
+    data = crawl_icd_web(url_data=url)
     print(data)
 
 # Kiểm tra nếu file được chạy trực tiếp

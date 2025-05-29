@@ -90,7 +90,7 @@ class FallBackRetriever(BaseRetriever):
             embedding_model = HuggingFaceEmbeddings()
             web_results = self.web_retriever.get_relevant_documents(query)
             if not web_results:
-                print("Không tìm thấy kết quả web.")
+                # print("Không tìm thấy kết quả web.")
                 return []
 
             # Tính vector truy vấn
@@ -101,8 +101,8 @@ class FallBackRetriever(BaseRetriever):
             for doc in web_results:
                 doc_vec = embedding_model.embed_query(doc.page_content)
                 similarity = self.cosine_similarity(query_vec, doc_vec)
-                print(f"Similarity with doc: {similarity}")
-                if similarity >= 0.8:  # threshold có thể điều chỉnh
+                # print(f"Similarity with doc: {similarity}")
+                if similarity >= 0.85:  # threshold có thể điều chỉnh
                     filtered_results.append(doc)
 
             if not filtered_results:
@@ -110,7 +110,7 @@ class FallBackRetriever(BaseRetriever):
             return filtered_results
 
         except Exception as e:
-            print(f"Lỗi khi tìm kiếm web: {str(e)}")
+            # print(f"Lỗi khi tìm kiếm web: {str(e)}")
             return []
 
     def cosine_similarity(self, vec1, vec2) -> float:

@@ -7,6 +7,8 @@
 # from dotenv import load_dotenv
 from src.base.llm_model import get_hf_llm
 from src.rag.main import build_rag_chain
+import io
+from PIL import Image
 from langchain_core.messages import HumanMessage
 import base64
 #
@@ -94,14 +96,38 @@ def main():
     prompt_2 = "Dân số của Việt Nam là bao nhiêu"
     genai_docs = "./data_source/generative_ai"
     genai_chain = build_rag_chain(model)
-    # print(genai_chain(prompt))
-    # print(genai_chain(prompt_2))
-    # print(genai_chain("bệnh nhân bị đau lưng"))
-    # print(genai_chain("vị trí đau ở  trên , thời gian đau tầm 5 phút , mức độ nhẹ , không có triệu chứng khác , không có tiền sử bênh trước đó"))
-    # print(genai_chain("Tôi vừa cung cấp cho bạn những thông tin gì"))
-    print(genai_chain("Thủ đô của Việt Nam ở đâu ?"))
-    print(genai_chain("Dân số nước Pháp là bao nhiêu"))
-    print(genai_chain("Tôi vừa hỏi bạn câu gì"))
+
+    def load_image_base64_url(image_path: str, mime_type: str = "image/jpeg", max_size=(512, 512)) -> str:
+        try:
+            img = Image.open(image_path)
+            # Chuyển đổi RGBA sang RGB nếu cần
+            if img.mode == "RGBA":
+                img = img.convert("RGB")
+            img.thumbnail(max_size)  # Giảm kích thước hình ảnh
+            buffered = io.BytesIO()
+            img.save(buffered, format="JPEG")  # Lưu dưới dạng JPEG
+            encoded_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
+            return f"data:{mime_type};base64,{encoded_image}"
+        except Exception as e:
+            print(f"Lỗi khi mã hóa hình ảnh: {str(e)}")
+            return None
+
+    # Ví dụ
+    image_path = r"C:\Users\Dai Nam\Downloads\aThinhtaycheckmapanh.png"
+    image_url = load_image_base64_url(image_path)
+    print(image_url)
+    mime_type = "image/jpg"
+    prompt = "Hãy mô tả tấm ảnh này?"
+    # print(genai_chain("khái niệm tiêm ngừa là g"))
+    message = HumanMessage(
+        content=[
+            {"type": "text", "text": prompt},
+            {"type": "image_url", "image_url": f"{image_url}"}
+        ]
+    )
+    # print(image_url)
+    print(genai_chain(message))
+    # print(genai_chain("Tôi vừa cung cấp thông tin gì cho bạn"))
 
 
 
