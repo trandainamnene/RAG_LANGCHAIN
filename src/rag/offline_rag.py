@@ -25,12 +25,12 @@ class Str_OutputParser(StrOutputParser):
 
 
 class Offline_RAG:
-    def __init__(self, llm):
+    def __init__(self, llm , memory=None):
         self.llm = llm
         self.embedding_model = HuggingFaceEmbeddings()
-        self.memory = ConversationBufferMemory(
-            memory_key="chat_history",  # Khóa để truy xuất lịch sử trong prompt
-            return_messages=True  # Trả về danh sách các tin nhắn (HumanMessage, AIMessage)
+        self.memory = memory if memory is not None else ConversationBufferMemory(
+            memory_key="chat_history",
+            return_messages=True
         )
         _prompt = ChatPromptTemplate.from_messages([
             ("system",
@@ -44,18 +44,26 @@ class Offline_RAG:
         self.prompt = _prompt
         self.str_parser = Str_OutputParser()
         self.fallback = FallBackRetriever()
-        self.memory.clear()  #
-
+        if memory is None:
+            self.memory.clear()
 
     def get_chain(self, retriever):
+
+        def translateVnToEn(text) :
+            translate_prompt = f"Dịch câu sau sang tiếng Anh, giữ đúng ngữ nghĩa và chính xác: {text}"
+            rs = self.llm.invoke(translate_prompt)
+            print(rs.content)
+            return rs.content
+
         def retriever_with_fallback(question: str):
             initial_docs = retriever.get_relevant_documents(question)
             initial_context = self.format_docs(initial_docs)
-            if not self.is_context_relevant(initial_context, question):
-                print("Độ dài context không đủ hoặc câu hỏi không liên quan, chuyển sang truy vấn web")
-                return self.format_docs(self.fallback.get_relevant_documents(question))
-            else:
-                return initial_context
+            # if not self.is_context_relevant(initial_context, translateVnToEn(question)):
+            #     print("Độ dài context không đủ hoặc câu hỏi không liên quan, chuyển sang truy vấn web")
+            #     return self.format_docs(self.fallback.get_relevant_documents(question))
+            # else:
+            print(initial_context)
+            return initial_context
 
         input_data = {
             "context": retriever_with_fallback,
@@ -76,7 +84,7 @@ class Offline_RAG:
                 # response_from_model = self.llm.invoke([input_question])
                 response = self.llm.invoke([input_question])
                 print(type(response))
-                response_text = rag_chain.invoke(f"Bác sĩ đã gửi 1 tấm ảnh , và đây là mô tả về hình ảnh : {response.content}")
+                response_text = rag_chain.invoke(f"Tôi đã gửi 1 tấm ảnh , và đây là mô tả về hình ảnh : {response.content} . Câu hỏi của tôi là {question_text}")
             elif isinstance(input_question, str):
                 print("is str")
                 question_text = input_question
@@ -96,7 +104,7 @@ class Offline_RAG:
     def format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)
 
-    def is_context_relevant(self, context: str, question: str, threshold: float = 0.85) -> bool:
+    def is_context_relevant(self, context: str, question: str, threshold: float = 0.7) -> bool:
         """
         Tính cosine similarity giữa câu hỏi và từng đoạn context.
         Nếu có đoạn nào similarity >= threshold thì context được coi là liên quan.

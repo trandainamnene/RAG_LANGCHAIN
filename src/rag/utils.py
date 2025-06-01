@@ -23,8 +23,8 @@ class FallBackRetriever(BaseRetriever):
     Lớp retriever chỉ sử dụng web retriever để tìm kiếm thông tin.
     """
     # Cài đặt google_search_api_key và google_cse_id trong env
-    google_api_key: Optional[str] = os.getenv("GOOGLE_SEARCH_API_KEY")
-    google_cse_id: Optional[str] = os.getenv("GOOGLE_SEARCH_CSE_ID")
+    google_api_key: Optional[str] = "AIzaSyCFyLWNC_v7xz0AVS5XxRFxolTVf6tX3rw"
+    google_cse_id: Optional[str] = "e056d4f9bced54693"
     def __init__(self,
                  *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
@@ -49,8 +49,8 @@ class FallBackRetriever(BaseRetriever):
         Tạo search engine
         """
         return GoogleSearchAPIWrapper(
-            google_api_key=self.google_api_key,
-            google_cse_id=self.google_cse_id
+            google_api_key="AIzaSyCFyLWNC_v7xz0AVS5XxRFxolTVf6tX3rw",
+            google_cse_id="a1a4eb6dcb8ae4b66"
         )
 
     def _create_web_retriever(self) -> BaseRetriever:
@@ -77,7 +77,7 @@ class FallBackRetriever(BaseRetriever):
             vectorstore=vectorstore,
             search=search,
             llm=llm, allow_dangerous_requests=True
-            , num_search_results=3
+            , num_search_results=10
         )
         return web_retriever
 
@@ -90,7 +90,7 @@ class FallBackRetriever(BaseRetriever):
             embedding_model = HuggingFaceEmbeddings()
             web_results = self.web_retriever.get_relevant_documents(query)
             if not web_results:
-                # print("Không tìm thấy kết quả web.")
+                print("Không tìm thấy kết quả web.")
                 return []
 
             # Tính vector truy vấn
@@ -101,8 +101,8 @@ class FallBackRetriever(BaseRetriever):
             for doc in web_results:
                 doc_vec = embedding_model.embed_query(doc.page_content)
                 similarity = self.cosine_similarity(query_vec, doc_vec)
-                # print(f"Similarity with doc: {similarity}")
-                if similarity >= 0.85:  # threshold có thể điều chỉnh
+                print(f"Similarity with doc: {similarity}")
+                if similarity >= 0.7:  # threshold có thể điều chỉnh
                     filtered_results.append(doc)
 
             if not filtered_results:
@@ -110,7 +110,7 @@ class FallBackRetriever(BaseRetriever):
             return filtered_results
 
         except Exception as e:
-            # print(f"Lỗi khi tìm kiếm web: {str(e)}")
+            print(f"Lỗi khi tìm kiếm web: {str(e)}")
             return []
 
     def cosine_similarity(self, vec1, vec2) -> float:

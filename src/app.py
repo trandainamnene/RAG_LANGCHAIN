@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from src.rag.utils import Summarize
 import asyncio
 from typing import Generator
+from src.rag.db import *
 llm = get_hf_llm()
 app = FastAPI(
     title="Langchain Server",
@@ -53,11 +54,12 @@ async def summarize(input : inputSummarize) :
     summarize = Summarize(llm=llm).get_sumary_chain()
     result = summarize.invoke({"question" : input.question})
     return {"answer" : result}
-@app.post("/generative_ai" , response_model = outputQA)
-async def generative_ai(inputs : inputQA) :
+@app.post("/generative_ai/{idChat}" , response_model = outputQA)
+async def generative_ai(inputs : inputQA , idChat:int) :
     print("GOOGLE_SEARCH_API_KEY:", os.getenv("GOOGLE_SEARCH_API_KEY"))
     genai_docs = "./data_source/generative_ai"
-    genai_chain = build_rag_chain(llm)
+    memory = load_memory_from_db(idChat)
+    genai_chain = build_rag_chain(llm=llm, memory=memory)
     if (not inputs.image) :
         question = inputs.question
         stream_generator = genai_chain(question)  # Đây là generator

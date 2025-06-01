@@ -22,9 +22,9 @@ class outputSummarize(BaseModel):
 
 
 
-def build_rag_chain(llm) :
+def build_rag_chain(llm , memory=None) :
     # doc_loaded = Loader(file_type = data_type).load_dir(data_dir , workers = 1)
-    retriever = get_retriever(collection_name="data_test")
-    rag_chain = Offline_RAG(llm).get_chain(retriever=retriever)
+    retriever = get_retriever(collection_name="data_icd_big_minify")
+    rag_chain = Offline_RAG(llm=llm , memory=memory).get_chain(retriever=retriever)
 
     return rag_chain

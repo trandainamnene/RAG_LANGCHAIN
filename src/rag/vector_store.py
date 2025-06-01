@@ -130,7 +130,7 @@ def main():
         - Các biến môi trường cần thiết (như OPENAI_API_KEY) đã được cấu hình
     """
     # Test seed_milvus với dữ liệu local
-    seed_milvus('http://localhost:19530', 'data_test_2', 'dataICD.json', 'data')
+    seed_milvus('http://localhost:19530', 'data_icd_big_minify', 'BigDataMinify.json', 'data')
 
 
 # Chạy main() nếu file được thực thi trực tiếp

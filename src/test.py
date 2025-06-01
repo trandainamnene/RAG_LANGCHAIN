@@ -11,6 +11,7 @@ import io
 from PIL import Image
 from langchain_core.messages import HumanMessage
 import base64
+from src.rag.db import *
 #
 
 
@@ -113,7 +114,7 @@ def main():
             return None
 
     # Ví dụ
-    image_path = r"C:\Users\Dai Nam\Downloads\aThinhtaycheckmapanh.png"
+    image_path = r"C:\Users\Dai Nam\Downloads\mayday.png"
     image_url = load_image_base64_url(image_path)
     print(image_url)
     mime_type = "image/jpg"
@@ -130,7 +131,15 @@ def main():
     # print(genai_chain("Tôi vừa cung cấp thông tin gì cho bạn"))
 
 
+def test_memory_load_from_db() :
+    # memory = load_memory_from_db(1)
+    model = get_hf_llm()
+    # ai_chainn = build_rag_chain(model)
+    ai_chain = build_rag_chain(model)
+    print(ai_chain("Bệnh nhân bị sùi mào gà"))
+
+
 
 # Kiểm tra nếu file được chạy trực tiếp
 if __name__ == "__main__":
-    main()
+    test_memory_load_from_db()
