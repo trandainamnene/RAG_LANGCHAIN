@@ -48,8 +48,7 @@ class FallBackRetriever(BaseRetriever):
     Lớp retriever chỉ sử dụng web retriever để tìm kiếm thông tin.
     """
     # Cài đặt google_search_api_key và google_cse_id trong env
-    google_api_key: Optional[str] = "AIzaSyCFyLWNC_v7xz0AVS5XxRFxolTVf6tX3rw"
-    google_cse_id: Optional[str] = "e056d4f9bced54693"
+
     def __init__(self,
                  *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
@@ -74,8 +73,7 @@ class FallBackRetriever(BaseRetriever):
         Tạo search engine
         """
         return GoogleSearchAPIWrapper(
-            google_api_key="AIzaSyBuLJ6zbOXyGQNe3e4deLjBDrnsP5Vsvio",
-            google_cse_id="e056d4f9bced54693"
+
         )
 
     def _create_web_retriever(self) -> BaseRetriever:
