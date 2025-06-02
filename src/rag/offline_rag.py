@@ -8,6 +8,7 @@ from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesP
 from langchain.memory import ConversationBufferMemory
 from langchain_core.messages import HumanMessage, AIMessage
 import numpy as np
+from deep_translator import GoogleTranslator
 class Str_OutputParser(StrOutputParser):
     def __init__(self) -> None:
         super().__init__()
@@ -35,7 +36,7 @@ class Offline_RAG:
         _prompt = ChatPromptTemplate.from_messages([
             ("system",
              "Bạn là một trợ lý ảo y khoa, chuyên hỗ trợ bác sĩ trong việc đưa ra chỉ định cận lâm sàng và quyết định lâm sàng. "
-             "Dựa trên ngữ cảnh thông tin y học bên dưới và lịch sử hội thoại gần nhất, hãy trả lời rõ ràng, chính xác. "
+             "Dựa trên ngữ cảnh thông tin y học bên dưới và lịch sử hội thoại gần nhất, hãy trả lời rõ ràng, chính xác và chỉ trả lời những câu hỏi từ y tế  "
              "Nếu câu hỏi liên quan đến lịch sử hội thoại, hãy chỉ xem xét các câu hỏi và câu trả lời ngay trước đó. "
              "Nếu không đủ thông tin, hãy nói rõ và đề xuất các xét nghiệm cận lâm sàng cần thiết."),
             MessagesPlaceholder(variable_name="chat_history"),
@@ -50,20 +51,18 @@ class Offline_RAG:
     def get_chain(self, retriever):
 
         def translateVnToEn(text) :
-            translate_prompt = f"Dịch câu sau sang tiếng Anh, giữ đúng ngữ nghĩa và chính xác: {text}"
-            rs = self.llm.invoke(translate_prompt)
-            print(rs.content)
-            return rs.content
-
+            translated = GoogleTranslator(source='vi', target='en').translate(text)
+            return translated
         def retriever_with_fallback(question: str):
-            initial_docs = retriever.get_relevant_documents(question)
+            initial_docs = retriever.get_relevant_documents(translateVnToEn(question))
             initial_context = self.format_docs(initial_docs)
             # if not self.is_context_relevant(initial_context, translateVnToEn(question)):
             #     print("Độ dài context không đủ hoặc câu hỏi không liên quan, chuyển sang truy vấn web")
             #     return self.format_docs(self.fallback.get_relevant_documents(question))
             # else:
+            web_context = self.format_docs(self.fallback.get_relevant_documents(question))
             print(initial_context)
-            return initial_context
+            return initial_context + web_context
 
         input_data = {
             "context": retriever_with_fallback,

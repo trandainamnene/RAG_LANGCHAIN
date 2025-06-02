@@ -118,7 +118,7 @@ def main():
     image_url = load_image_base64_url(image_path)
     print(image_url)
     mime_type = "image/jpg"
-    prompt = "Hãy mô tả tấm ảnh này?"
+    prompt = "Tấm ảnh này đang nói cái gì?"
     # print(genai_chain("khái niệm tiêm ngừa là g"))
     message = HumanMessage(
         content=[
@@ -136,10 +136,12 @@ def test_memory_load_from_db() :
     model = get_hf_llm()
     # ai_chainn = build_rag_chain(model)
     ai_chain = build_rag_chain(model)
-    print(ai_chain("Bệnh nhân bị sùi mào gà"))
+    # print(ai_chain("các bệnh lây qua đường tình dục"))
+    # print(ai_chain("bạn có thể mô tả từng loại bạn vừa kể không"))
+    print(ai_chain("Văn Cao?"))
 
 
 
 # Kiểm tra nếu file được chạy trực tiếp
 if __name__ == "__main__":
-    test_memory_load_from_db()
+    main()

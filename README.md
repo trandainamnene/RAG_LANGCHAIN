@@ -41,4 +41,3 @@ streamlit run ui.py
 ## 👥 Thành viên dự án
 - Trần Đại Nam 
 - Huỳnh Thành Tựu
-- Nguyễn Duy Dương

@@ -27,9 +27,13 @@ app.add_middleware(
 )
 
 async def to_async_generator(sync_gen: Generator[str, None, None]):
-    for chunk in sync_gen:
-        yield chunk
-        await asyncio.sleep(0.05)  # nhỏ để nhả control về event loop
+    try:
+        for chunk in sync_gen:
+            yield chunk
+            await asyncio.sleep(0.001)
+    except Exception as e:
+        print(f"[to_async_generator] Streaming error: {e}")
+        yield f"[ERROR] {str(e)}\n"
 
 @app.get("/check")
 async def check() :

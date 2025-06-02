@@ -6,6 +6,7 @@ from langchain.utilities import GoogleSearchAPIWrapper
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 import os
+
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.output_parsers import StrOutputParser
 
@@ -14,9 +15,33 @@ from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.prompts import PromptTemplate
 from langchain_core.runnables import RunnableLambda
+from langchain_community.document_loaders.web_base import WebBaseLoader
 import numpy as np
 load_dotenv()
 
+
+class CustomWebResearchRetriever(WebResearchRetriever):
+    """Lớp tùy chỉnh WebResearchRetriever để bỏ qua trang lỗi ngay lập tức."""
+
+    def _fetch_page(self, url: str) -> Optional[str]:
+        """
+        Ghi đè phương thức fetch để bỏ qua trang lỗi thay vì thử lại.
+
+        Args:
+            url: URL của trang web cần tải.
+
+        Returns:
+            Nội dung trang web nếu thành công, None nếu lỗi.
+        """
+        try:
+            # Tải trang với timeout ngắn
+            loader = WebBaseLoader(url)
+            response = loader.requests.get(url, timeout=5)
+            response.raise_for_status()
+            return response.text
+        except Exception as e:
+            print(f"Bỏ qua URL {url} do lỗi: {str(e)}")
+            return None
 
 class FallBackRetriever(BaseRetriever):
     """
@@ -49,8 +74,8 @@ class FallBackRetriever(BaseRetriever):
         Tạo search engine
         """
         return GoogleSearchAPIWrapper(
-            google_api_key="AIzaSyCFyLWNC_v7xz0AVS5XxRFxolTVf6tX3rw",
-            google_cse_id="a1a4eb6dcb8ae4b66"
+            google_api_key="AIzaSyBuLJ6zbOXyGQNe3e4deLjBDrnsP5Vsvio",
+            google_cse_id="e056d4f9bced54693"
         )
 
     def _create_web_retriever(self) -> BaseRetriever:
@@ -73,11 +98,12 @@ class FallBackRetriever(BaseRetriever):
             return None
 
         # Tạo WebResearchRetriever
-        web_retriever = WebResearchRetriever.from_llm(
+        web_retriever = CustomWebResearchRetriever.from_llm(
             vectorstore=vectorstore,
             search=search,
-            llm=llm, allow_dangerous_requests=True
-            , num_search_results=10
+            llm=llm,
+            allow_dangerous_requests=True,
+            num_search_results=5
         )
         return web_retriever
 
@@ -97,17 +123,18 @@ class FallBackRetriever(BaseRetriever):
             query_vec = embedding_model.embed_query(query)
 
             # Lọc kết quả theo độ tương đồng
-            filtered_results = []
-            for doc in web_results:
-                doc_vec = embedding_model.embed_query(doc.page_content)
-                similarity = self.cosine_similarity(query_vec, doc_vec)
-                print(f"Similarity with doc: {similarity}")
-                if similarity >= 0.7:  # threshold có thể điều chỉnh
-                    filtered_results.append(doc)
-
-            if not filtered_results:
-                print("Không có context đủ liên quan sau khi lọc.")
-            return filtered_results
+            # filtered_results = []
+            # for doc in web_results:
+            #     doc_vec = embedding_model.embed_query(doc.page_content)
+            #     similarity = self.cosine_similarity(query_vec, doc_vec)
+            #     print(f"Similarity with doc: {similarity}")
+            #     if similarity >= 0.7:  # threshold có thể điều chỉnh
+            #         filtered_results.append(doc)
+            #
+            # if not filtered_results:
+            #     print("Không có context đủ liên quan sau khi lọc.")
+            # return filtered_results
+            return web_results
 
         except Exception as e:
             print(f"Lỗi khi tìm kiếm web: {str(e)}")
