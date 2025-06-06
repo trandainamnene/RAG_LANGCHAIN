@@ -19,7 +19,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:8080"],
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
     allow_credentials=True,
@@ -54,10 +54,6 @@ async def summarize(input: inputQA):
         )
         result = summarize_chain.invoke({"question": message})
     return {"answer": result}
-async def summarize(input : inputSummarize) :
-    summarize = Summarize(llm=llm).get_sumary_chain()
-    result = summarize.invoke({"question" : input.question})
-    return {"answer" : result}
 @app.post("/generative_ai/{idChat}" , response_model = outputQA)
 async def generative_ai(inputs : inputQA , idChat:int) :
     print("GOOGLE_SEARCH_API_KEY:", os.getenv("GOOGLE_SEARCH_API_KEY"))

@@ -139,9 +139,10 @@ def test_memory_load_from_db() :
     # print(ai_chain("các bệnh lây qua đường tình dục"))
     # print(ai_chain("bạn có thể mô tả từng loại bạn vừa kể không"))
     print(ai_chain("Văn Cao?"))
+    print(ai_chain("Váddd?"))
 
 
 
 # Kiểm tra nếu file được chạy trực tiếp
 if __name__ == "__main__":
-    main()
+    test_memory_load_from_db()

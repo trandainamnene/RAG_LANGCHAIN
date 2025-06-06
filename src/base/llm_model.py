@@ -1,7 +1,3 @@
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-from langchain_huggingface import HuggingFacePipeline
-from transformers import BitsAndBytesConfig
 from dotenv import load_dotenv
 import os
 from google.oauth2 import service_account
@@ -41,7 +37,7 @@ def get_hf_llm(model_name="gemini-2.0-flash", max_new_tokens=512, **kwargs):
     # )
     llm = ChatGoogleGenerativeAI(
         model=model_name,
-        temperature=0,
+        temperature=2,
         timeout=None,
         max_retries=2,
         google_api_key=google_api_key,

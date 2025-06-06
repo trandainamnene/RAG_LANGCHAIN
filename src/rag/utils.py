@@ -73,7 +73,8 @@ class FallBackRetriever(BaseRetriever):
         Tạo search engine
         """
         return GoogleSearchAPIWrapper(
-
+            google_api_key="AIzaSyBuLJ6zbOXyGQNe3e4deLjBDrnsP5Vsvio",
+            google_cse_id="e056d4f9bced54693"
         )
 
     def _create_web_retriever(self) -> BaseRetriever:
@@ -100,8 +101,8 @@ class FallBackRetriever(BaseRetriever):
             vectorstore=vectorstore,
             search=search,
             llm=llm,
-            allow_dangerous_requests=True,
-            num_search_results=5
+            # allow_dangerous_requests=True,
+            num_search_results=1
         )
         return web_retriever
 
